@@ -1,0 +1,43 @@
+isspam -- Bayesian spam detector in Ruby with a SQLite database
+
+Chip Camden, July, 2010
+
+The isspam utility provides a command-line interface to the IsSpam Ruby
+class, which performs Bayesian filtering on potential spam, in a manner
+very similar to the approach described in Paul Graham's essay "A Plan for
+Spam" <http://www.paulgraham.com/spam.html>.
+
+This utility can take incoming messages either on stdin or as file
+arguments.  The input may contain multiple messages, which will be
+distinguished by a Unix "from" header (/^From /).  Thus, you can use an
+entire mail folder (in mbox format) as input, or individual messages.
+
+See the man page (included under man) for details on using this utility.
+
+See the RDoc pages (included under doc) for documentation of the Ruby
+class.  The file isspam.rb should be placed somewhere in your Ruby
+require path.
+
+The included dot.getlessmail file shows how you can use IsSpam to detect
+incoming spam, via getlessmail (http://chipstips.com/?tag=rbgetlessmail).
+The example scores every incoming message and adds a header indicating the
+score, then it whitelists known good originators, then spams anything with
+a score of over .90.  Obviously, you can adjust that threshold to your own
+spam tolerance.
+
+The included script isspam_update is an example of how you could update
+your spam database from mbox files.  If you configure your MUA to save
+good deleted mail to ~/Mail/Deleted/good and to save spam to
+~/Mail/Deleted/spam, then you could run isspam_update from cron nightly
+to populate the .isspam.db database.  This approach is preferable to
+piping the messages through isspam directly from mutt, because isspam can
+impose a noticeable delay when updating the database for large messages.
+
+In my MUA (mutt), I mapped the 'd' key (normally reserved for
+delete-message) to a macro "s=Deleted/good\n", so normal mail deletion
+gets marked as good.  I also mapped the 'z' key to (guess what)
+"s=Deleted/spam\n".  That allows me to review my spam folder (populated
+by getlessmail) before committing those messages to the database as spam.
+Even after marking them as truly spam by pressing 'z', I can still
+retrieve them by changing to the =Deleted/spam folder and saving them
+elsewhere.

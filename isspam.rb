@@ -86,37 +86,41 @@ private
   end
 
   def add(message, spam)
-    each_phrase(message) do |phrase|
-      rows = query("select * from SPAMSTATS where phrase = ?", phrase)
-      if rows && rows.size > 0
-	row = add_one(rows[0], spam)
-	query("update SPAMSTATS
+    @db.transaction do |db|
+      each_phrase(message) do |phrase|
+	rows = query("select * from SPAMSTATS where phrase = ?", phrase)
+	if rows && rows.size > 0
+	  row = add_one(rows[0], spam)
+	  query("update SPAMSTATS
 		    set spam=?, good=?
 		    where phrase = ?",
 		    row[1], row[2], row[0])
-      else
-	row = add_one([phrase, 0, 0], spam)
-	query("insert into SPAMSTATS
+	else
+	  row = add_one([phrase, 0, 0], spam)
+	  query("insert into SPAMSTATS
 		    values (?, ?, ?)", row)
+	end
       end
-    end
-    rows = query("select * from SPAMSTATS where phrase = ?", TOTAL_KEY)
-    row = add_one(rows[0], spam)
-    query("update SPAMSTATS
+      rows = query("select * from SPAMSTATS where phrase = ?", TOTAL_KEY)
+      row = add_one(rows[0], spam)
+      query("update SPAMSTATS
     		set spam=?, good=?
 		where phrase = ?",
 		row[1], row[2], TOTAL_KEY)
+    end
   end
 
 public
   # Message is spam, update database accordingly
   def yes(message)
     add message, true
+    nil
   end
 
   # Message is not spam, update database accordingly
   def no(message)
     add message, false
+    nil
   end
 
   # Is message spam?  Returns probability (0.0 - 1.0)

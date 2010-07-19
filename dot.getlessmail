@@ -1,0 +1,8 @@
+require "isspam"
+
+score = IsSpam.new("/home/sterling/.isspam.db").well? message
+addfield 'X-Spam-Score', sprintf("%3.3f",score) if score
+
+keep if from /@example\.com\b/i
+
+spam if score && score > 0.9	# apply Bayesian filter after whitelist
