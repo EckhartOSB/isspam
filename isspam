@@ -1,0 +1,68 @@
+#!/usr/local/bin/ruby
+#
+# Bayesian spam filter
+#
+# Chip Camden, July 2010
+#
+require 'optparse'
+require 'isspam'
+
+mode = nil
+database = "~/.isspam.db"
+max = nil
+
+optparse = OptionParser.new do |opts|
+  opts.banner = 'usage: isspam.rb [-ynpd] [-f database] [-m max]'
+
+  opts.on('-y', '--yes', 'Add message to database not spam') do
+    raise "More than one mode specified" if mode
+    mode = :yes
+  end
+
+  opts.on('-n', '--no', 'Add message to database as not spam') do
+    raise "More than one mode specified" if mode
+    mode = :no
+  end
+
+  opts.on('-p', '--probability', 'Determine probability that this is spam') do
+    raise "More than one mode specified" if mode
+    mode = :well?
+  end
+
+  opts.on('-d', '--dump', 'Dump all stats') do
+    raise "More than one mode specified" if mode
+    mode = :dump
+  end
+
+  opts.on('-f', '--file database', 'Specify spam database') do |file|
+    database = file
+  end
+
+  opts.on('-m', '--max maxphrase', 'Specify maximum phrase length (default = 3)') do |m|
+    max = m.to_i
+  end
+
+end
+
+begin
+  optparse.parse!
+rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
+  puts e
+  puts optparse
+  exit 1
+end
+
+if mode
+  isspam = IsSpam.new File.expand_path(database)
+  isspam.max_phrase_length = max if max && max > 0
+  if mode == :dump
+    puts isspam.dump
+  else
+    $<.readlines.join.split(/^From /).each do |msg|
+      if msg.length > 0
+	rslt = isspam.send(mode, msg)
+	puts rslt if rslt
+      end
+    end
+  end
+end

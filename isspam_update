@@ -1,0 +1,11 @@
+#!/bin/sh
+process() {
+  if [ -s $1 ]
+  then
+    ~/bin/isspam -$2 $1
+    > $1
+  fi
+}
+
+process ~/Mail/Deleted/spam  y 
+process ~/Mail/Deleted/good  n 
