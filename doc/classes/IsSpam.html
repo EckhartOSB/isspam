@@ -95,6 +95,7 @@ A Bayesian spam filter with a SQLite back-end
       <a href="#M000005">dump</a>&nbsp;&nbsp;
       <a href="#M000001">new</a>&nbsp;&nbsp;
       <a href="#M000003">no</a>&nbsp;&nbsp;
+      <a href="#M000006">stats</a>&nbsp;&nbsp;
       <a href="#M000004">well?</a>&nbsp;&nbsp;
       <a href="#M000002">yes</a>&nbsp;&nbsp;
       </div>
@@ -216,6 +217,29 @@ Returns string array of all database information
           <p>
 Message is not spam, update database accordingly
 </p>
+        </div>
+      </div>
+
+      <div id="method-M000006" class="method-detail">
+        <a name="M000006"></a>
+
+        <div class="method-heading">
+          <a href="IsSpam.src/M000006.html" target="Code" class="method-signature"
+            onclick="popupCode('IsSpam.src/M000006.html');return false;">
+          <span class="method-name">stats</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Returns a hash of statistics for the database
+</p>
+<pre>
+ {:phrases =&gt; (number of phrases),
+  :total =&gt; (number of messages),
+  :spam =&gt; (number of spam messages),
+  :good =&gt; (number of good messages)}
+</pre>
         </div>
       </div>
 

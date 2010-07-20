@@ -177,4 +177,28 @@ public
     end
   end
 
+  # Returns a hash of statistics for the database
+  #
+  #  {:phrases => (number of phrases),
+  #   :total => (number of messages),
+  #   :spam => (number of spam messages),
+  #   :good => (number of good messages)}
+  def stats
+    rows = query("select * from SPAMSTATS where phrase = ?", TOTAL_KEY)
+    if (rows && rows.size > 0)
+      spam = rows[0][1].to_i
+      good = rows[0][2].to_i
+      total = spam + good
+    else
+      good = spam = total = nil
+    end
+    rows = query("select count(*) from SPAMSTATS")
+    if (rows && rows.size > 0)
+      phrases = rows[0][0].to_i
+    else
+      phrases = nil
+    end
+    {:phrases => phrases, :total => total, :spam => spam, :good => good }
+  end
+
 end

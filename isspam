@@ -12,7 +12,7 @@ database = "~/.isspam.db"
 max = nil
 
 optparse = OptionParser.new do |opts|
-  opts.banner = 'usage: isspam.rb [-ynpd] [-f database] [-m max]'
+  opts.banner = 'usage: isspam.rb [-ynpds] [-f database] [-m max]'
 
   opts.on('-y', '--yes', 'Add message to database not spam') do
     raise "More than one mode specified" if mode
@@ -32,6 +32,11 @@ optparse = OptionParser.new do |opts|
   opts.on('-d', '--dump', 'Dump all stats') do
     raise "More than one mode specified" if mode
     mode = :dump
+  end
+
+  opts.on('-s', '--stats', 'Output general stats') do
+    raise "More than one mode specified" if mode
+    mode = :stats
   end
 
   opts.on('-f', '--file database', 'Specify spam database') do |file|
@@ -54,15 +59,17 @@ end
 
 if mode
   isspam = IsSpam.new File.expand_path(database)
-  isspam.max_phrase_length = max if max && max > 0
-  if mode == :dump
-    puts isspam.dump
-  else
-    $<.readlines.join.split(/^From /).each do |msg|
-      if msg.length > 0
-	rslt = isspam.send(mode, msg)
+  case mode
+    when :dump
+      puts isspam.dump
+    when :stats
+      stats = isspam.stats
+      puts "#{stats[:phrases]} unique phrases in #{stats[:total]} messages: #{stats[:spam]} spam, #{stats[:good]} good"
+    else
+      isspam.max_phrase_length = max if max && max > 0
+      $<.readlines.join.split(/^From /).each do |msg|
+	rslt = isspam.send(mode, msg) if msg.length > 0
 	puts rslt if rslt
       end
-    end
   end
 end
