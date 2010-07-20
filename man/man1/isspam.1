@@ -7,7 +7,7 @@
 .Nd Bayesian spam detection utility
 .Sh SYNOPSIS
 .Nm
-.Op Fl ynpds
+.Op Fl dnpsvy
 .Op Fl f Ar database
 .Op Fl m Ar maxphrase
 .Op Ar file...
@@ -15,24 +15,26 @@
 The isspam utility provides a command-line interface to the IsSpam Ruby class, which performs Bayesian filtering on potential spam, in a manner very similar to the approach described in Paul Graham's essay "A Plan for Spam" <http://www.paulgraham.com/spam.html>.
 This utility can take incoming messages either on stdin or as file arguments.  The input may contain multiple messages, which will be distinguished by a Unix "from" header (/^From /).  Thus, you can use an entire mail folder (in mbox format) as input, or individual messages.
 The
-.Op Fl ynpds
+.Op Fl dnpsy
 options are mutually exclusive.  Incoming messages may be treated as spam, not spam, or be tested for spam.
 .Sh OPTIONS
 .Bl -tag -width indent
-.It Fl y, yes
-Treat all input as spam, and update the database accordingly.
-.It Fl n, no
-Treat all input as not spam, and update the database accordingly.
-.It Fl p, probability
-Prints the probability that the input is spam to stdout.
 .It Fl d, dump
 Dump all database content to stdout.
-.It Fl s, stats
-Dump general statistics to stdout.
 .It Fl f, file Ar database
 Specify the database to use (default is ~/.isspam.db).  The database will be created if it does not exist.
 .It Fl m, max Ar maxphrase
 Specify the maximum phrase length to test (default is 3).
+.It Fl n, no
+Treat all input as not spam, and update the database accordingly.
+.It Fl p, probability
+Prints the probability that the input is spam to stdout.
+.It Fl s, stats
+Dump general statistics to stdout.
+.It Fl v, verbose
+Generates more output, including the path to the database and progress through messages.
+.It Fl y, yes
+Treat all input as spam, and update the database accordingly.
 .Sh SEE ALSO
 RDoc documentation for IsSpam (included).
 .Sh AUTHOR

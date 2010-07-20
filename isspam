@@ -10,9 +10,10 @@ require 'isspam'
 mode = nil
 database = "~/.isspam.db"
 max = nil
+verbose = false
 
 optparse = OptionParser.new do |opts|
-  opts.banner = 'usage: isspam.rb [-ynpds] [-f database] [-m max]'
+  opts.banner = 'usage: isspam.rb [-ynpdsv] [-f database] [-m max]'
 
   opts.on('-y', '--yes', 'Add message to database not spam') do
     raise "More than one mode specified" if mode
@@ -43,6 +44,10 @@ optparse = OptionParser.new do |opts|
     database = file
   end
 
+  opts.on('-v', '--verbose', 'Get more output') do
+    verbose = true
+  end
+
   opts.on('-m', '--max maxphrase', 'Specify maximum phrase length (default = 3)') do |m|
     max = m.to_i
   end
@@ -58,7 +63,9 @@ rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
 end
 
 if mode
-  isspam = IsSpam.new File.expand_path(database)
+  db = File.expand_path database
+  puts "Database: #{db}" if verbose
+  isspam = IsSpam.new db
   case mode
     when :dump
       puts isspam.dump
@@ -67,9 +74,21 @@ if mode
       puts "#{stats[:phrases]} unique phrases in #{stats[:total]} messages: #{stats[:spam]} spam, #{stats[:good]} good"
     else
       isspam.max_phrase_length = max if max && max > 0
+      count = 0
       $<.readlines.join.split(/^From /).each do |msg|
-	rslt = isspam.send(mode, msg) if msg.length > 0
-	puts rslt if rslt
+	if msg.length > 1
+	  if verbose
+	    print "Message #{count}\t"
+	    $stdout.flush
+	  end
+	  rslt = isspam.send(mode, msg) if msg.length > 0
+	  if rslt
+	    printf("%3.3f\n", rslt) 
+	  else
+	    puts "" if verbose
+	  end
+	  count += 1
+	end
       end
   end
 end
