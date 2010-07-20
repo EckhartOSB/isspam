@@ -71,7 +71,11 @@ if mode
       puts isspam.dump
     when :stats
       stats = isspam.stats
-      puts "#{stats[:phrases]} unique phrases in #{stats[:total]} messages: #{stats[:spam]} spam, #{stats[:good]} good"
+      if verbose
+        puts "#{stats[:phrases]} unique phrases in #{stats[:total]} messages: #{stats[:spam]} spam, #{stats[:good]} good"
+      else
+        puts "phrases:#{stats[:phrases]} messages:#{stats[:total]} spam:#{stats[:spam]} good:#{stats[:good]}"
+      end
     else
       isspam.max_phrase_length = max if max && max > 0
       count = 0
