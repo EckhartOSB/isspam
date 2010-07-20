@@ -75,19 +75,17 @@ if mode
     else
       isspam.max_phrase_length = max if max && max > 0
       count = 0
-      $<.readlines.join.split(/^From /).each do |msg|
-	if msg.length > 1
-	  if verbose
-	    print "Message #{count}\t"
-	    $stdout.flush
-	  end
-	  rslt = isspam.send(mode, msg) if msg.length > 0
-	  if rslt
-	    printf("%3.3f\n", rslt) 
-	  else
-	    puts "" if verbose
-	  end
-	  count += 1
+      msgs = $<.readlines.join.split(/^From /).reject {|msg| msg.length < 2}
+      msgs.each do |msg|
+	if verbose
+	  print "Message #{count+=1}/#{msgs.size}\t"
+	  $stdout.flush
+	end
+	rslt = isspam.send(mode, msg) if msg.length > 0
+	if rslt
+	  printf("%3.3f\n", rslt) 
+	else
+	  puts "" if verbose
 	end
       end
   end
