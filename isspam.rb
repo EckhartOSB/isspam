@@ -46,13 +46,13 @@ private
       @db.execute(cmd, args)
     rescue SQLite3::BusyException => e
       raise e if (count < 1)
-      sleep 1
+      sleep 2
       retry_query(count-1, cmd, *args)
     end
   end
 
   def query(cmd, *args)
-    retry_query(10, cmd, args)
+    retry_query(30, cmd, args)
   end
 
   def add_one(row, spam)
