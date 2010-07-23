@@ -68,7 +68,7 @@ if mode
   isspam = IsSpam.new db
   case mode
     when :dump
-      puts isspam.dump
+      isspam.dump
     when :stats
       stats = isspam.stats
       if verbose

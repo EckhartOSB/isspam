@@ -110,6 +110,17 @@ private
     end
   end
 
+  def probability(b, g, nb, ng)
+    bp = b / nb
+    bp = 1.0 if bp > 1.0
+    gp = g / ng
+    gp = 1.0 if gp > 1.0
+    p = bp / (bp + gp)
+    p = 0.01 if p < 0.01
+    p = 0.99 if p > 0.99
+    p
+  end
+
 public
   # Message is spam, update database accordingly
   def yes(message)
@@ -138,14 +149,7 @@ public
 	b = row[1].to_f
 	g = row[2].to_f
 	if ((b + g) >= 5)
-	  bp = b / nb
-	  bp = 1.0 if bp > 1.0
-	  gp = g / ng
-	  gp = 1.0 if gp > 1.0
-	  p = bp / (bp + gp)
-	  p = 0.01 if p < 0.01
-	  p = 0.99 if p > 0.99
-	  probs <<  p
+	  probs << probability(b, g, nb, ng)
 	end
       end
     end
@@ -159,22 +163,67 @@ public
   end
 
   # Returns string array of all database information
-  def dump
-    rslt = ["Phrase                                               # Spam               # OK",
-    	    "------                                               ------               ----"]
-    rows = query("select * from SPAMSTATS order by phrase")
-    total = nil
+  def dump(file=$stderr)
+    nb = 1.0
+    ng = 1.0
+    rows = query("select * from SPAMSTATS where phrase = ?", TOTAL_KEY)
+    if rows.size > 0
+      row = rows[0]
+      nb = row[1].to_f
+      ng = row[2].to_f
+    end
+    spammiest = {:prob => 0.0, :occur => 0, :phrases => []}
+    cleanest = {:prob => 1.0, :occur => 0, :phrases => []}
+    rows = query("select * from SPAMSTATS where phrase <> ? order by phrase", TOTAL_KEY)
+    file.puts "Phrase                                             # Spam             # OK  Prob"
+    file.puts "------                                             ------             ----  ----"
     rows.each do |phrase, spam, good|
-      if (phrase == TOTAL_KEY)
-        total = [spam.to_i, good.to_i]
+      b = spam.to_i
+      g = good.to_i
+      if (b + g) >= 5
+	p = probability(b, g, nb, ng)
+	file.puts sprintf("%-40s %18d %18d %3.3f", phrase[0,40], b, g, p)
+	o = b + g
+	case p <=> cleanest[:prob]
+	  when -1
+	    cleanest[:prob] = p
+	    cleanest[:occur] = o
+	    cleanest[:phrases] = [phrase]
+	  when 0
+	    case o <=> cleanest[:occur]
+	      when 1
+	        cleanest[:occur] = o
+		cleanest[:phrases] = [phrase]
+	      when 0
+	        cleanest[:phrases] << phrase
+	    end
+	end
+	case p <=> spammiest[:prob]
+	  when 1
+	    spammiest[:prob] = p
+	    spammiest[:occur] = o
+	    spammiest[:phrases] = [phrase]
+	  when 0
+	    case o <=> spammiest[:occur]
+	      when 1
+	        spammiest[:occur] = o
+		spammiest[:phrases] = [phrase]
+	      when 0
+	        spammiest[:phrases] << phrase
+	    end
+	end
       else
-        rslt << sprintf("%-40s %18d %18d", phrase[0,40], spam.to_i, good.to_i)
+        file.puts sprintf("%-40s %18d %18d  N/S", phrase[0,40], b, g)
       end
     end
-    if total
-      rslt << "" << sprintf("%-40s %18d %18d", "Total messages:", total[0], total[1])
-      rslt << "Phrases: #{rows.size-1}"
-    end
+    file.puts ""
+    file.puts sprintf("%-40s %16d %16d", "Total messages:", nb, ng)
+    file.puts "Phrases: #{rows.size}"
+    file.puts "Spammiest phrases (#{sprintf("%3.3f", spammiest[:prob])}, #{spammiest[:occur]} occurences):"
+    file.puts "\t" + spammiest[:phrases].join("\n\t")
+    file.puts " Cleanest phrases (#{sprintf("%3.3f", cleanest[:prob])}, #{cleanest[:occur]} occurences):"
+    file.puts "\t" + cleanest[:phrases].join("\n\t")
+    nil
   end
 
   # Returns a hash of statistics for the database
@@ -194,7 +243,7 @@ public
     end
     rows = query("select count(*) from SPAMSTATS")
     if (rows && rows.size > 0)
-      phrases = rows[0][0].to_i
+      phrases = rows[0][0].to_i - 1	# subtract totals record
     else
       phrases = nil
     end
