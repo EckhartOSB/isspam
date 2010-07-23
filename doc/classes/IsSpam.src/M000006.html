@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
 </head>
 <body class="standalone-code">
-  <pre><span class="ruby-comment cmt"># File isspam.rb, line 186</span>
+  <pre><span class="ruby-comment cmt"># File isspam.rb, line 235</span>
   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">stats</span>
     <span class="ruby-identifier">rows</span> = <span class="ruby-identifier">query</span>(<span class="ruby-value str">&quot;select * from SPAMSTATS where phrase = ?&quot;</span>, <span class="ruby-constant">TOTAL_KEY</span>)
     <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">rows</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">rows</span>.<span class="ruby-identifier">size</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>)
@@ -20,9 +20,9 @@
     <span class="ruby-keyword kw">else</span>
       <span class="ruby-identifier">good</span> = <span class="ruby-identifier">spam</span> = <span class="ruby-identifier">total</span> = <span class="ruby-keyword kw">nil</span>
     <span class="ruby-keyword kw">end</span>
-    <span class="ruby-identifier">rows</span> = <span class="ruby-identifier">query</span>(<span class="ruby-value str">&quot;select count from SPAMSTATS&quot;</span>)
+    <span class="ruby-identifier">rows</span> = <span class="ruby-identifier">query</span>(<span class="ruby-value str">&quot;select count(*) from SPAMSTATS&quot;</span>)
     <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">rows</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">rows</span>.<span class="ruby-identifier">size</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>)
-      <span class="ruby-identifier">phrases</span> = <span class="ruby-identifier">rows</span>[<span class="ruby-value">0</span>][<span class="ruby-value">0</span>].<span class="ruby-identifier">to_i</span>
+      <span class="ruby-identifier">phrases</span> = <span class="ruby-identifier">rows</span>[<span class="ruby-value">0</span>][<span class="ruby-value">0</span>].<span class="ruby-identifier">to_i</span> <span class="ruby-operator">-</span> <span class="ruby-value">1</span>     <span class="ruby-comment cmt"># subtract totals record</span>
     <span class="ruby-keyword kw">else</span>
       <span class="ruby-identifier">phrases</span> = <span class="ruby-keyword kw">nil</span>
     <span class="ruby-keyword kw">end</span>

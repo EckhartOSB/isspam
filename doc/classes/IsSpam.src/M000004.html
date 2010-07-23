@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
 </head>
 <body class="standalone-code">
-  <pre><span class="ruby-comment cmt"># File isspam.rb, line 127</span>
+  <pre><span class="ruby-comment cmt"># File isspam.rb, line 138</span>
   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">well?</span>(<span class="ruby-identifier">message</span>)
     <span class="ruby-identifier">probs</span> = []
     <span class="ruby-identifier">rows</span> = <span class="ruby-identifier">query</span>(<span class="ruby-value str">&quot;select * from SPAMSTATS where phrase = ?&quot;</span>, <span class="ruby-constant">TOTAL_KEY</span>)
@@ -25,14 +25,7 @@
         <span class="ruby-identifier">b</span> = <span class="ruby-identifier">row</span>[<span class="ruby-value">1</span>].<span class="ruby-identifier">to_f</span>
         <span class="ruby-identifier">g</span> = <span class="ruby-identifier">row</span>[<span class="ruby-value">2</span>].<span class="ruby-identifier">to_f</span>
         <span class="ruby-keyword kw">if</span> ((<span class="ruby-identifier">b</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">g</span>) <span class="ruby-operator">&gt;=</span> <span class="ruby-value">5</span>)
-          <span class="ruby-identifier">bp</span> = <span class="ruby-identifier">b</span> <span class="ruby-operator">/</span> <span class="ruby-identifier">nb</span>
-          <span class="ruby-identifier">bp</span> = <span class="ruby-value">1.0</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">bp</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">1.0</span>
-          <span class="ruby-identifier">gp</span> = <span class="ruby-identifier">g</span> <span class="ruby-operator">/</span> <span class="ruby-identifier">ng</span>
-          <span class="ruby-identifier">gp</span> = <span class="ruby-value">1.0</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">gp</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">1.0</span>
-          <span class="ruby-identifier">p</span> = <span class="ruby-identifier">bp</span> <span class="ruby-operator">/</span> (<span class="ruby-identifier">bp</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">gp</span>)
-          <span class="ruby-identifier">p</span> = <span class="ruby-value">0</span><span class="ruby-value">.01</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">p</span> <span class="ruby-operator">&lt;</span> <span class="ruby-value">0</span><span class="ruby-value">.01</span>
-          <span class="ruby-identifier">p</span> = <span class="ruby-value">0</span><span class="ruby-value">.99</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">p</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span><span class="ruby-value">.99</span>
-          <span class="ruby-identifier">probs</span> <span class="ruby-operator">&lt;&lt;</span>  <span class="ruby-identifier">p</span>
+          <span class="ruby-identifier">probs</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">probability</span>(<span class="ruby-identifier">b</span>, <span class="ruby-identifier">g</span>, <span class="ruby-identifier">nb</span>, <span class="ruby-identifier">ng</span>)
         <span class="ruby-keyword kw">end</span>
       <span class="ruby-keyword kw">end</span>
     <span class="ruby-keyword kw">end</span>

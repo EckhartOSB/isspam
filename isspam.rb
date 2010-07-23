@@ -162,8 +162,8 @@ public
     end
   end
 
-  # Returns string array of all database information
-  def dump(file=$stderr)
+  # Dump all database information and statistics to file
+  def dump(file=$stdout)
     nb = 1.0
     ng = 1.0
     rows = query("select * from SPAMSTATS where phrase = ?", TOTAL_KEY)
