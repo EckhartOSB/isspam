@@ -17,20 +17,36 @@ class IsSpam
   # Maximum number of adjacent words to test together
   attr :max_phrase_length, true
 
+  # Maximum number of retries on busy resource (default 60)
+  attr :retries, true
+
+  # Interval between retries (in seconds, default 5)
+  attr :retry_interval, true
+
   # Connect to (or create) a Bayesian database
   #
   # database is the path to the SQLite database
   def initialize(database)
     newdb = !File.exists?(database)
     @db = SQLite3::Database.new(database)
+    @retries = 60
+    @retry_interval = 5
+    @db.busy_handler() do |resource, retries|
+      if retries > @retries
+        0
+      else
+	sleep @retry_interval
+	1
+      end
+    end
     if newdb
-      query("create table SPAMSTATS (
+      @db.execute("create table SPAMSTATS (
 	    phrase VARCHAR(256) NOT NULL PRIMARY KEY,
 	    spam BIGINT DEFAULT 0,
 	    good BIGINT DEFAULT 0
 	    );")
       # special '' key for total number of each
-      query("insert into SPAMSTATS
+      @db.execute("insert into SPAMSTATS
       		   values (?, 0, 0)", TOTAL_KEY)
     end
     @word_split = /[.:;,]*[\s\n\r\v]+/
@@ -40,20 +56,6 @@ class IsSpam
 
 private
   TOTAL_KEY = ' '			# Key for totals record
-
-  def retry_query(count, cmd, *args)
-    begin
-      @db.execute(cmd, args)
-    rescue SQLite3::BusyException => e
-      raise e if (count < 1)
-      sleep 5
-      retry_query(count-1, cmd, *args)
-    end
-  end
-
-  def query(cmd, *args)
-    retry_query(60, cmd, args)
-  end
 
   def add_one(row, spam)
     if (spam)
@@ -88,22 +90,22 @@ private
   def add(message, spam)
     @db.transaction do |db|
       each_phrase(message) do |phrase|
-	rows = query("select * from SPAMSTATS where phrase = ?", phrase)
+	rows = @db.execute("select * from SPAMSTATS where phrase = ?", phrase)
 	if rows && rows.size > 0
 	  row = add_one(rows[0], spam)
-	  query("update SPAMSTATS
+	  @db.execute("update SPAMSTATS
 		    set spam=?, good=?
 		    where phrase = ?",
 		    row[1], row[2], row[0])
 	else
 	  row = add_one([phrase, 0, 0], spam)
-	  query("insert into SPAMSTATS
+	  @db.execute("insert into SPAMSTATS
 		    values (?, ?, ?)", row)
 	end
       end
-      rows = query("select * from SPAMSTATS where phrase = ?", TOTAL_KEY)
+      rows = @db.execute("select * from SPAMSTATS where phrase = ?", TOTAL_KEY)
       row = add_one(rows[0], spam)
-      query("update SPAMSTATS
+      @db.execute("update SPAMSTATS
     		set spam=?, good=?
 		where phrase = ?",
 		row[1], row[2], TOTAL_KEY)
@@ -137,13 +139,13 @@ public
   # Is message spam?  Returns probability (0.0 - 1.0)
   def well?(message)
     probs = []
-    rows = query("select * from SPAMSTATS where phrase = ?", TOTAL_KEY)
+    rows = @db.execute("select * from SPAMSTATS where phrase = ?", TOTAL_KEY)
     row = rows[0]
     nb = row[1].to_f	    # total spam messages
     ng = row[2].to_f        # total nonspam messages
     raise "Cannot compute probability: sample too small" if ((nb < 1) || (ng < 1))
     each_phrase(message) do |phrase|
-      rows = query("select * from SPAMSTATS where phrase = ?", phrase)
+      rows = @db.execute("select * from SPAMSTATS where phrase = ?", phrase)
       if rows && rows.size > 0
 	row = rows[0]
 	b = row[1].to_f
@@ -166,7 +168,7 @@ public
   def dump(file=$stdout)
     nb = 1.0
     ng = 1.0
-    rows = query("select * from SPAMSTATS where phrase = ?", TOTAL_KEY)
+    rows = @db.execute("select * from SPAMSTATS where phrase = ?", TOTAL_KEY)
     if rows.size > 0
       row = rows[0]
       nb = row[1].to_f
@@ -174,7 +176,7 @@ public
     end
     spammiest = {:prob => 0.0, :occur => 0, :phrases => []}
     cleanest = {:prob => 1.0, :occur => 0, :phrases => []}
-    rows = query("select * from SPAMSTATS where phrase <> ? order by phrase", TOTAL_KEY)
+    rows = @db.execute("select * from SPAMSTATS where phrase <> ? order by phrase", TOTAL_KEY)
     file.puts "Phrase                                             # Spam             # OK  Prob"
     file.puts "------                                             ------             ----  ----"
     rows.each do |phrase, spam, good|
@@ -233,7 +235,7 @@ public
   #   :spam => (number of spam messages),
   #   :good => (number of good messages)}
   def stats
-    rows = query("select * from SPAMSTATS where phrase = ?", TOTAL_KEY)
+    rows = @db.execute("select * from SPAMSTATS where phrase = ?", TOTAL_KEY)
     if (rows && rows.size > 0)
       spam = rows[0][1].to_i
       good = rows[0][2].to_i
@@ -241,7 +243,7 @@ public
     else
       good = spam = total = nil
     end
-    rows = query("select count(*) from SPAMSTATS")
+    rows = @db.execute("select count(*) from SPAMSTATS")
     if (rows && rows.size > 0)
       phrases = rows[0][0].to_i - 1	# subtract totals record
     else
