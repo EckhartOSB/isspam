@@ -23,6 +23,9 @@ class IsSpam
   # Interval between retries (in seconds, default 5)
   attr :retry_interval, true
 
+  # Block to handle progress updates
+  attr :progress_callback, true
+
   # Connect to (or create) a Bayesian database
   #
   # database is the path to the SQLite database
@@ -33,8 +36,10 @@ class IsSpam
     @retry_interval = 5
     @db.busy_handler() do |resource, retries|
       if retries > @retries
+	@progress_callback.call "Database busy timed out." if @progress_callback
         0
       else
+	@progress_callback.call "Database busy...retry #{retries}/#{@retries}" if @progress_callback
 	sleep @retry_interval
 	1
       end
@@ -52,6 +57,7 @@ class IsSpam
     @word_split = /[.:;,]*[\s\n\r\v]+/
     @trailing = /([!?])$/
     @max_phrase_length = 3
+    @progress_callback = nil
   end
 
 private
@@ -82,7 +88,11 @@ private
     end
     # now get any words imbedded with non-word characters
     phrases.concat msg.split(/\W/).reject {|e| e.length < 1}
-    phrases.uniq.each do |phrase|
+    cnt = 0
+    phrases.uniq!
+    phrases.each do |phrase|
+      cnt += 1
+      @progress_callback.call "Phrase #{cnt}/#{phrases.size}" if @progress_callback
       yield phrase
     end
   end
@@ -250,6 +260,12 @@ public
       phrases = nil
     end
     {:phrases => phrases, :total => total, :spam => spam, :good => good }
+  end
+
+
+  # Set the progress_callback to the block passed
+  def onprogress(&block)
+    @progress_callback = block
   end
 
 end

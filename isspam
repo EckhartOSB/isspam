@@ -66,6 +66,11 @@ if mode
   db = File.expand_path database
   puts "Database: #{db}" if verbose
   isspam = IsSpam.new db
+  msglen = 0
+  isspam.onprogress do |msg|
+    print "\x08"*msglen + msg + "    "
+    msglen = msg.length + 4
+  end if verbose
   case mode
     when :dump
       isspam.dump
@@ -87,7 +92,7 @@ if mode
 	end
 	rslt = isspam.send(mode, msg) if msg.length > 0
 	if rslt
-	  printf("%3.3f\n", rslt) 
+	  printf("%3.3f\n", rslt)
 	else
 	  puts "" if verbose
 	end
