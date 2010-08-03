@@ -68,8 +68,9 @@ if mode
   isspam = IsSpam.new db
   msglen = 0
   isspam.onprogress do |msg|
-    print "\x08"*msglen + msg + "    "
-    msglen = msg.length + 4
+    print "\x08"*msglen + msg + "          "
+    $stdout.flush
+    msglen = msg.length + 10
   end if verbose
   case mode
     when :dump
@@ -87,6 +88,7 @@ if mode
       msgs = $<.readlines.join.split(/^From /).reject {|msg| msg.length < 2}
       msgs.each do |msg|
 	if verbose
+	  msglen = 0
 	  print "Message #{count+=1}/#{msgs.size}\t"
 	  $stdout.flush
 	end

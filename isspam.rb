@@ -35,11 +35,11 @@ class IsSpam
     @retries = 60
     @retry_interval = 5
     @db.busy_handler() do |resource, retries|
-      if retries > @retries
+      if retries >= @retries
 	@progress_callback.call "Database busy timed out." if @progress_callback
         0
       else
-	@progress_callback.call "Database busy...retry #{retries}/#{@retries}" if @progress_callback
+	@progress_callback.call "Database busy...retry #{retries+1}/#{@retries}" if @progress_callback
 	sleep @retry_interval
 	1
       end
