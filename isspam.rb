@@ -5,6 +5,34 @@
 require 'rubygems'
 require 'sqlite3'
 
+class PagedRows
+  attr :size
+
+  def initialize(db, pagesize, query, param)
+    @db = db
+    @query = query
+    @param = param
+    @pagesize = pagesize
+    @size = 0
+  end
+
+  def each(&block)
+    offset = 0
+    begin
+      items = @db.execute(@query + " LIMIT #{@pagesize} OFFSET #{offset}", @param)
+      items.each &block
+      offset += @pagesize
+      @size += items.size
+    end until items.size < @pagesize
+  end
+end
+
+class SQLite3::Database
+  def paged_execute(pagesize, query, param)
+    PagedRows.new self, pagesize, query, param
+  end
+end
+
 # A Bayesian spam filter with a SQLite back-end
 class IsSpam
 
@@ -186,7 +214,7 @@ public
     end
     spammiest = {:prob => 0.0, :occur => 0, :phrases => []}
     cleanest = {:prob => 1.0, :occur => 0, :phrases => []}
-    rows = @db.execute("select * from SPAMSTATS where phrase <> ? order by phrase", TOTAL_KEY)
+    rows = @db.paged_execute(10000, "select * from SPAMSTATS where phrase <> ? order by phrase", TOTAL_KEY)
     file.puts "Phrase                                             # Spam             # OK  Prob"
     file.puts "------                                             ------             ----  ----"
     rows.each do |phrase, spam, good|
