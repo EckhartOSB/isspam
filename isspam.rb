@@ -5,56 +5,71 @@
 require 'rubygems'
 require 'sqlite3'
 
+# class to create an array-like set of paged database query results
 class PagedRows
-  attr :size
+  # count of items retrieved so far
+  attr :count
 
+  # Create a paged query
+  #  db = SQLite3::Database
+  #  pagesize = int, number of rows per query
+  #  query = select statement without limit or offset
+  #  param = parameter for query
   def initialize(db, pagesize, query, param)
     @db = db
     @query = query
     @param = param
     @pagesize = pagesize
-    @size = 0
+    @count = 0
   end
 
+  # Iterate over all rows from multiple queries
   def each(&block)
-    queue = []
+    queue = []			# pages yet to be processed
     done = false
     mutex = Mutex.new
+
+    # worker thread for database queries
     t = Thread.new {
       offset = 0
       begin
+	# grab a page
         enq = @db.execute(@query + " LIMIT #{@pagesize} OFFSET #{offset}", @param)
 	mutex.synchronize do
-	  queue << enq
+	  queue << enq		# add to queue
 	end
         offset += @pagesize
-        @size += enq.size
+        @count += enq.size
       end until enq.size < @pagesize
-      enq = nil
+      enq = nil			# so last page gets released after processing
       done = true
     }
 
-    nsleep = 1
-    deq = nil
+    nsleep = 0.5		# how long to wait for worker thread
+    deq = nil			# establish scope of deq
     while (!done)
       sleep nsleep
-      while queue.size > 0
-	nsleep = [0, nsleep-2].max
+      while queue.size > 0	# any rows already fetched?
 	mutex.synchronize do
        	  deq = queue.shift
         end
-	deq.each &block
-	deq = nil
-	Thread.pass
+	deq.each &block		# process the page of rows
+	deq = nil		# release for GC
+	Thread.pass		# give the worker thread a chance
+	nsleep = [0.001, (nsleep*0.6666666667)].max	# Ok, we waited long enough (will be bumped below)
       end
-      nsleep += 1
+      nsleep *= 1.5		# wait a little longer next time
     end
 
-    t.join
+    t.join			# this should be a formality
   end
 end
 
 class SQLite3::Database
+  # Create a paged query
+  #  pagesize = number of rows per query
+  #  query = database select statement
+  #  param = parameter for query
   def paged_execute(pagesize, query, param)
     PagedRows.new self, pagesize, query, param
   end
@@ -287,7 +302,7 @@ public
     end
     file.puts ""
     file.puts sprintf("%-40s %16d %16d", "Total messages:", nb, ng)
-    file.puts "Phrases: #{rows.size}    Significant: #{sign} (#{sign*100/rows.size}%)"
+    file.puts "Phrases: #{rows.count}    Significant: #{sign} (#{sign*100/rows.count}%)"
     file.puts "Spammiest phrases (#{sprintf("%3.3f", spammiest[:prob])}, #{spammiest[:occur]} occurences):"
     file.puts "\t" + spammiest[:phrases].join("\n\t")
     file.puts " Cleanest phrases (#{sprintf("%3.3f", cleanest[:prob])}, #{cleanest[:occur]} occurences):"

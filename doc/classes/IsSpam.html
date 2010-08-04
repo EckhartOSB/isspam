@@ -92,12 +92,13 @@ A Bayesian spam filter with a SQLite back-end
       <h3 class="section-bar">Methods</h3>
 
       <div class="name-list">
-      <a href="#M000005">dump</a>&nbsp;&nbsp;
-      <a href="#M000001">new</a>&nbsp;&nbsp;
-      <a href="#M000003">no</a>&nbsp;&nbsp;
-      <a href="#M000006">stats</a>&nbsp;&nbsp;
-      <a href="#M000004">well?</a>&nbsp;&nbsp;
-      <a href="#M000002">yes</a>&nbsp;&nbsp;
+      <a href="#M000007">dump</a>&nbsp;&nbsp;
+      <a href="#M000003">new</a>&nbsp;&nbsp;
+      <a href="#M000005">no</a>&nbsp;&nbsp;
+      <a href="#M000009">onprogress</a>&nbsp;&nbsp;
+      <a href="#M000008">stats</a>&nbsp;&nbsp;
+      <a href="#M000006">well?</a>&nbsp;&nbsp;
+      <a href="#M000004">yes</a>&nbsp;&nbsp;
       </div>
     </div>
 
@@ -135,6 +136,14 @@ A Bayesian spam filter with a SQLite back-end
           <td class="context-item-value">&nbsp;[RW]&nbsp;</td>
           <td class="context-item-desc">
 Maximum number of adjacent words to test together
+
+</td>
+        </tr>
+        <tr class="top-aligned-row context-row">
+          <td class="context-item-name">progress_callback</td>
+          <td class="context-item-value">&nbsp;[RW]&nbsp;</td>
+          <td class="context-item-desc">
+Block to handle progress updates
 
 </td>
         </tr>
@@ -180,12 +189,12 @@ Where to split words (Regexp)
     <div id="methods">
       <h3 class="section-bar">Public Class methods</h3>
 
-      <div id="method-M000001" class="method-detail">
-        <a name="M000001"></a>
+      <div id="method-M000003" class="method-detail">
+        <a name="M000003"></a>
 
         <div class="method-heading">
-          <a href="IsSpam.src/M000001.html" target="Code" class="method-signature"
-            onclick="popupCode('IsSpam.src/M000001.html');return false;">
+          <a href="IsSpam.src/M000003.html" target="Code" class="method-signature"
+            onclick="popupCode('IsSpam.src/M000003.html');return false;">
           <span class="method-name">new</span><span class="method-args">(database)</span>
           </a>
         </div>
@@ -202,12 +211,12 @@ database is the path to the SQLite database
 
       <h3 class="section-bar">Public Instance methods</h3>
 
-      <div id="method-M000005" class="method-detail">
-        <a name="M000005"></a>
+      <div id="method-M000007" class="method-detail">
+        <a name="M000007"></a>
 
         <div class="method-heading">
-          <a href="IsSpam.src/M000005.html" target="Code" class="method-signature"
-            onclick="popupCode('IsSpam.src/M000005.html');return false;">
+          <a href="IsSpam.src/M000007.html" target="Code" class="method-signature"
+            onclick="popupCode('IsSpam.src/M000007.html');return false;">
           <span class="method-name">dump</span><span class="method-args">(file=$stdout)</span>
           </a>
         </div>
@@ -219,12 +228,12 @@ Dump all database information and statistics to file
         </div>
       </div>
 
-      <div id="method-M000003" class="method-detail">
-        <a name="M000003"></a>
+      <div id="method-M000005" class="method-detail">
+        <a name="M000005"></a>
 
         <div class="method-heading">
-          <a href="IsSpam.src/M000003.html" target="Code" class="method-signature"
-            onclick="popupCode('IsSpam.src/M000003.html');return false;">
+          <a href="IsSpam.src/M000005.html" target="Code" class="method-signature"
+            onclick="popupCode('IsSpam.src/M000005.html');return false;">
           <span class="method-name">no</span><span class="method-args">(message)</span>
           </a>
         </div>
@@ -236,12 +245,29 @@ Message is not spam, update database accordingly
         </div>
       </div>
 
-      <div id="method-M000006" class="method-detail">
-        <a name="M000006"></a>
+      <div id="method-M000009" class="method-detail">
+        <a name="M000009"></a>
 
         <div class="method-heading">
-          <a href="IsSpam.src/M000006.html" target="Code" class="method-signature"
-            onclick="popupCode('IsSpam.src/M000006.html');return false;">
+          <a href="IsSpam.src/M000009.html" target="Code" class="method-signature"
+            onclick="popupCode('IsSpam.src/M000009.html');return false;">
+          <span class="method-name">onprogress</span><span class="method-args">(&amp;block)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Set the progress_callback to the block passed
+</p>
+        </div>
+      </div>
+
+      <div id="method-M000008" class="method-detail">
+        <a name="M000008"></a>
+
+        <div class="method-heading">
+          <a href="IsSpam.src/M000008.html" target="Code" class="method-signature"
+            onclick="popupCode('IsSpam.src/M000008.html');return false;">
           <span class="method-name">stats</span><span class="method-args">()</span>
           </a>
         </div>
@@ -259,12 +285,12 @@ Returns a hash of statistics for the database
         </div>
       </div>
 
-      <div id="method-M000004" class="method-detail">
-        <a name="M000004"></a>
+      <div id="method-M000006" class="method-detail">
+        <a name="M000006"></a>
 
         <div class="method-heading">
-          <a href="IsSpam.src/M000004.html" target="Code" class="method-signature"
-            onclick="popupCode('IsSpam.src/M000004.html');return false;">
+          <a href="IsSpam.src/M000006.html" target="Code" class="method-signature"
+            onclick="popupCode('IsSpam.src/M000006.html');return false;">
           <span class="method-name">well?</span><span class="method-args">(message)</span>
           </a>
         </div>
@@ -276,12 +302,12 @@ Is message spam? Returns probability (0.0 - 1.0)
         </div>
       </div>
 
-      <div id="method-M000002" class="method-detail">
-        <a name="M000002"></a>
+      <div id="method-M000004" class="method-detail">
+        <a name="M000004"></a>
 
         <div class="method-heading">
-          <a href="IsSpam.src/M000002.html" target="Code" class="method-signature"
-            onclick="popupCode('IsSpam.src/M000002.html');return false;">
+          <a href="IsSpam.src/M000004.html" target="Code" class="method-signature"
+            onclick="popupCode('IsSpam.src/M000004.html');return false;">
           <span class="method-name">yes</span><span class="method-args">(message)</span>
           </a>
         </div>
