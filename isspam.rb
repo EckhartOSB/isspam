@@ -17,13 +17,40 @@ class PagedRows
   end
 
   def each(&block)
-    offset = 0
-    begin
-      items = @db.execute(@query + " LIMIT #{@pagesize} OFFSET #{offset}", @param)
-      items.each &block
-      offset += @pagesize
-      @size += items.size
-    end until items.size < @pagesize
+    queue = []
+    done = false
+    mutex = Mutex.new
+    t = Thread.new {
+      offset = 0
+      begin
+        enq = @db.execute(@query + " LIMIT #{@pagesize} OFFSET #{offset}", @param)
+	mutex.synchronize do
+	  queue << enq
+	end
+        offset += @pagesize
+        @size += enq.size
+      end until enq.size < @pagesize
+      enq = nil
+      done = true
+    }
+
+    nsleep = 1
+    deq = nil
+    while (!done)
+      sleep nsleep
+      while queue.size > 0
+	nsleep = [0, nsleep-2].max
+	mutex.synchronize do
+       	  deq = queue.shift
+        end
+	deq.each &block
+	deq = nil
+	Thread.pass
+      end
+      nsleep += 1
+    end
+
+    t.join
   end
 end
 
@@ -217,10 +244,12 @@ public
     rows = @db.paged_execute(10000, "select * from SPAMSTATS where phrase <> ? order by phrase", TOTAL_KEY)
     file.puts "Phrase                                             # Spam             # OK  Prob"
     file.puts "------                                             ------             ----  ----"
+    sign = 0
     rows.each do |phrase, spam, good|
       b = spam.to_i
       g = good.to_i
       if (b + g) >= 5
+	sign += 1
 	p = probability(b, g, nb, ng)
 	file.puts sprintf("%-40s %18d %18d %3.3f", phrase[0,40], b, g, p)
 	o = b + g
@@ -258,7 +287,7 @@ public
     end
     file.puts ""
     file.puts sprintf("%-40s %16d %16d", "Total messages:", nb, ng)
-    file.puts "Phrases: #{rows.size}"
+    file.puts "Phrases: #{rows.size}    Significant: #{sign} (#{sign*100/rows.size}%)"
     file.puts "Spammiest phrases (#{sprintf("%3.3f", spammiest[:prob])}, #{spammiest[:occur]} occurences):"
     file.puts "\t" + spammiest[:phrases].join("\n\t")
     file.puts " Cleanest phrases (#{sprintf("%3.3f", cleanest[:prob])}, #{cleanest[:occur]} occurences):"
