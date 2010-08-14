@@ -87,6 +87,9 @@ class IsSpam
   # Maximum number of adjacent words to test together
   attr :max_phrase_length, true
 
+  # Maximum number of most significant phrases to consider (0-based, default 15, -1 = use all)
+  attr :max_significant, true
+
   # Maximum number of retries on busy resource (default 60)
   attr :retries, true
 
@@ -127,6 +130,7 @@ class IsSpam
     @word_split = /[.:;,]*[\s\n\r\v]+/
     @trailing = /([!?])$/
     @max_phrase_length = 3
+    @max_significant = 15
     @progress_callback = nil
   end
 
@@ -236,7 +240,7 @@ public
       end
     end
     if probs.length > 0
-      probs = probs.sort {|a,b| (b - 0.5).abs <=> (a - 0.5).abs}[0,15]	# descending by distance from 0.5
+      probs = probs.sort {|a,b| (b - 0.5).abs <=> (a - 0.5).abs}[0..@max_significant]	# descending by distance from 0.5
       prod = probs.inject(1) {|t,i| t * i}
       prod / (prod + probs.inject(1){|t,i| t * (1.0 - i)})
     else

@@ -10,10 +10,11 @@ require 'isspam'
 mode = nil
 database = "~/.isspam.db"
 max = nil
+count = nil
 verbose = false
 
 optparse = OptionParser.new do |opts|
-  opts.banner = 'usage: isspam.rb [-ynpdsv] [-f database] [-m max]'
+  opts.banner = 'usage: isspam.rb [-ynpdsv] [-f database] [-m max] [-c count]'
 
   opts.on('-y', '--yes', 'Add message to database not spam') do
     raise "More than one mode specified" if mode
@@ -52,6 +53,11 @@ optparse = OptionParser.new do |opts|
     max = m.to_i
   end
 
+  opts.on('-c', '--count significant', 'Specify the number of most significant phrases to count', '(applies to -p only, default = 15, include all = -1') do |c|
+    count = c.to_i
+    count -= 1 if count > 0
+  end
+
 end
 
 begin
@@ -84,6 +90,7 @@ if mode
       end
     else
       isspam.max_phrase_length = max if max && max > 0
+      isspam.max_significant = count if count
       count = 0
       msgs = $<.readlines.join.split(/^From /).reject {|msg| msg.length < 2}
       msgs.each do |msg|
