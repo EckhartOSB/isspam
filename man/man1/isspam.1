@@ -8,6 +8,7 @@
 .Sh SYNOPSIS
 .Nm
 .Op Fl dnpsvy
+.Op Fl c Ar count
 .Op Fl f Ar database
 .Op Fl m Ar maxphrase
 .Op Ar file...
@@ -19,6 +20,8 @@ The
 options are mutually exclusive.  Incoming messages may be treated as spam, not spam, or be tested for spam.
 .Sh OPTIONS
 .Bl -tag -width indent
+.It Fl c, count Ar count
+Specify the maximum number of most significant phrases to use in computing spam probability.  The default is 15, use -1 for all phrases.
 .It Fl d, dump
 Dump all database content to stdout.
 .It Fl f, file Ar database
