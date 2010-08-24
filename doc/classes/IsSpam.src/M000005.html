@@ -5,14 +5,72 @@
 
 <html>
 <head>
-  <title>no (IsSpam)</title>
+  <title>dump (IsSpam)</title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
   <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
 </head>
 <body class="standalone-code">
-  <pre><span class="ruby-comment cmt"># File isspam.rb, line 218</span>
-  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">no</span>(<span class="ruby-identifier">message</span>)
-    <span class="ruby-identifier">add</span> <span class="ruby-identifier">message</span>, <span class="ruby-keyword kw">false</span>
+  <pre><span class="ruby-comment cmt"># File isspam.rb, line 194</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">dump</span>(<span class="ruby-identifier">file</span>=<span class="ruby-identifier">$stdout</span>)
+    <span class="ruby-identifier">nb</span> = <span class="ruby-value">1.0</span>
+    <span class="ruby-identifier">ng</span> = <span class="ruby-value">1.0</span>
+    <span class="ruby-identifier">row</span> = <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">get_first_row</span>(<span class="ruby-value str">&quot;select spam,good from TOTALS where id = 0&quot;</span>)
+    <span class="ruby-identifier">nb</span> = <span class="ruby-identifier">row</span>[<span class="ruby-value">0</span>].<span class="ruby-identifier">to_f</span>
+    <span class="ruby-identifier">ng</span> = <span class="ruby-identifier">row</span>[<span class="ruby-value">1</span>].<span class="ruby-identifier">to_f</span>
+    <span class="ruby-identifier">spammiest</span> = {<span class="ruby-identifier">:prob</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span><span class="ruby-value">.0</span>, <span class="ruby-identifier">:occur</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>, <span class="ruby-identifier">:phrases</span> =<span class="ruby-operator">&gt;</span> []}
+    <span class="ruby-identifier">cleanest</span> = {<span class="ruby-identifier">:prob</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">1.0</span>, <span class="ruby-identifier">:occur</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>, <span class="ruby-identifier">:phrases</span> =<span class="ruby-operator">&gt;</span> []}
+    <span class="ruby-identifier">file</span>.<span class="ruby-identifier">puts</span> <span class="ruby-value str">&quot;Phrase                                             # Spam             # OK  Prob&quot;</span>
+    <span class="ruby-identifier">file</span>.<span class="ruby-identifier">puts</span> <span class="ruby-value str">&quot;------                                             ------             ----  ----&quot;</span>
+    <span class="ruby-identifier">sign</span> = <span class="ruby-value">0</span>
+    <span class="ruby-identifier">count</span> = <span class="ruby-value">0</span>
+    <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">execute</span>(<span class="ruby-value str">&quot;select * from SPAMSTATS order by phrase&quot;</span>) <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">phrase</span>, <span class="ruby-identifier">spam</span>, <span class="ruby-identifier">good</span><span class="ruby-operator">|</span>
+      <span class="ruby-identifier">count</span> <span class="ruby-operator">+=</span> <span class="ruby-value">1</span>
+      <span class="ruby-identifier">b</span> = <span class="ruby-identifier">spam</span>.<span class="ruby-identifier">to_i</span>
+      <span class="ruby-identifier">g</span> = <span class="ruby-identifier">good</span>.<span class="ruby-identifier">to_i</span>
+      <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">b</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">g</span>) <span class="ruby-operator">&gt;=</span> <span class="ruby-value">5</span>
+        <span class="ruby-identifier">sign</span> <span class="ruby-operator">+=</span> <span class="ruby-value">1</span>
+        <span class="ruby-identifier">p</span> = <span class="ruby-identifier">probability</span>(<span class="ruby-identifier">b</span>, <span class="ruby-identifier">g</span>, <span class="ruby-identifier">nb</span>, <span class="ruby-identifier">ng</span>)
+        <span class="ruby-identifier">file</span>.<span class="ruby-identifier">puts</span> <span class="ruby-identifier">sprintf</span>(<span class="ruby-value str">&quot;%-40s %16d %16d %3.3f&quot;</span>, <span class="ruby-identifier">phrase</span>[<span class="ruby-value">0</span>,<span class="ruby-value">40</span>], <span class="ruby-identifier">b</span>, <span class="ruby-identifier">g</span>, <span class="ruby-identifier">p</span>)
+        <span class="ruby-identifier">o</span> = <span class="ruby-identifier">b</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">g</span>
+        <span class="ruby-keyword kw">case</span> <span class="ruby-identifier">p</span> <span class="ruby-operator">&lt;=&gt;</span> <span class="ruby-identifier">cleanest</span>[<span class="ruby-identifier">:prob</span>]
+          <span class="ruby-keyword kw">when</span> <span class="ruby-value">-1</span>
+            <span class="ruby-identifier">cleanest</span>[<span class="ruby-identifier">:prob</span>] = <span class="ruby-identifier">p</span>
+            <span class="ruby-identifier">cleanest</span>[<span class="ruby-identifier">:occur</span>] = <span class="ruby-identifier">o</span>
+            <span class="ruby-identifier">cleanest</span>[<span class="ruby-identifier">:phrases</span>] = [<span class="ruby-identifier">phrase</span>]
+          <span class="ruby-keyword kw">when</span> <span class="ruby-value">0</span>
+            <span class="ruby-keyword kw">case</span> <span class="ruby-identifier">o</span> <span class="ruby-operator">&lt;=&gt;</span> <span class="ruby-identifier">cleanest</span>[<span class="ruby-identifier">:occur</span>]
+              <span class="ruby-keyword kw">when</span> <span class="ruby-value">1</span>
+                <span class="ruby-identifier">cleanest</span>[<span class="ruby-identifier">:occur</span>] = <span class="ruby-identifier">o</span>
+                <span class="ruby-identifier">cleanest</span>[<span class="ruby-identifier">:phrases</span>] = [<span class="ruby-identifier">phrase</span>]
+              <span class="ruby-keyword kw">when</span> <span class="ruby-value">0</span>
+                <span class="ruby-identifier">cleanest</span>[<span class="ruby-identifier">:phrases</span>] <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">phrase</span>
+            <span class="ruby-keyword kw">end</span>
+        <span class="ruby-keyword kw">end</span>
+        <span class="ruby-keyword kw">case</span> <span class="ruby-identifier">p</span> <span class="ruby-operator">&lt;=&gt;</span> <span class="ruby-identifier">spammiest</span>[<span class="ruby-identifier">:prob</span>]
+          <span class="ruby-keyword kw">when</span> <span class="ruby-value">1</span>
+            <span class="ruby-identifier">spammiest</span>[<span class="ruby-identifier">:prob</span>] = <span class="ruby-identifier">p</span>
+            <span class="ruby-identifier">spammiest</span>[<span class="ruby-identifier">:occur</span>] = <span class="ruby-identifier">o</span>
+            <span class="ruby-identifier">spammiest</span>[<span class="ruby-identifier">:phrases</span>] = [<span class="ruby-identifier">phrase</span>]
+          <span class="ruby-keyword kw">when</span> <span class="ruby-value">0</span>
+            <span class="ruby-keyword kw">case</span> <span class="ruby-identifier">o</span> <span class="ruby-operator">&lt;=&gt;</span> <span class="ruby-identifier">spammiest</span>[<span class="ruby-identifier">:occur</span>]
+              <span class="ruby-keyword kw">when</span> <span class="ruby-value">1</span>
+                <span class="ruby-identifier">spammiest</span>[<span class="ruby-identifier">:occur</span>] = <span class="ruby-identifier">o</span>
+                <span class="ruby-identifier">spammiest</span>[<span class="ruby-identifier">:phrases</span>] = [<span class="ruby-identifier">phrase</span>]
+              <span class="ruby-keyword kw">when</span> <span class="ruby-value">0</span>
+                <span class="ruby-identifier">spammiest</span>[<span class="ruby-identifier">:phrases</span>] <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">phrase</span>
+            <span class="ruby-keyword kw">end</span>
+        <span class="ruby-keyword kw">end</span>
+      <span class="ruby-keyword kw">else</span>
+        <span class="ruby-identifier">file</span>.<span class="ruby-identifier">puts</span> <span class="ruby-identifier">sprintf</span>(<span class="ruby-value str">&quot;%-40s %16d %16d  N/S&quot;</span>, <span class="ruby-identifier">phrase</span>[<span class="ruby-value">0</span>,<span class="ruby-value">40</span>], <span class="ruby-identifier">b</span>, <span class="ruby-identifier">g</span>)
+      <span class="ruby-keyword kw">end</span>
+    <span class="ruby-keyword kw">end</span>
+    <span class="ruby-identifier">file</span>.<span class="ruby-identifier">puts</span> <span class="ruby-value str">&quot;&quot;</span>
+    <span class="ruby-identifier">file</span>.<span class="ruby-identifier">puts</span> <span class="ruby-identifier">sprintf</span>(<span class="ruby-value str">&quot;%-40s %16d %16d&quot;</span>, <span class="ruby-value str">&quot;Total messages:&quot;</span>, <span class="ruby-identifier">nb</span>, <span class="ruby-identifier">ng</span>)
+    <span class="ruby-identifier">file</span>.<span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;Phrases: #{count}    Significant: #{sign} (#{sign*100/count}%)&quot;</span>
+    <span class="ruby-identifier">file</span>.<span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;Spammiest phrases (#{sprintf(&quot;%3.3f&quot;, spammiest[:prob])}, #{spammiest[:occur]} occurences):&quot;</span>
+    <span class="ruby-identifier">file</span>.<span class="ruby-identifier">puts</span> <span class="ruby-value str">&quot;\t&quot;</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">spammiest</span>[<span class="ruby-identifier">:phrases</span>].<span class="ruby-identifier">join</span>(<span class="ruby-value str">&quot;\n\t&quot;</span>)
+    <span class="ruby-identifier">file</span>.<span class="ruby-identifier">puts</span> <span class="ruby-node">&quot; Cleanest phrases (#{sprintf(&quot;%3.3f&quot;, cleanest[:prob])}, #{cleanest[:occur]} occurences):&quot;</span>
+    <span class="ruby-identifier">file</span>.<span class="ruby-identifier">puts</span> <span class="ruby-value str">&quot;\t&quot;</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">cleanest</span>[<span class="ruby-identifier">:phrases</span>].<span class="ruby-identifier">join</span>(<span class="ruby-value str">&quot;\n\t&quot;</span>)
     <span class="ruby-keyword kw">nil</span>
   <span class="ruby-keyword kw">end</span></pre>
 </body>
