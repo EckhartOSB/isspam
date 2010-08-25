@@ -14,7 +14,7 @@ count = nil
 verbose = false
 
 optparse = OptionParser.new do |opts|
-  opts.banner = 'usage: isspam.rb [-ynpdsv] [-f database] [-m max] [-c count]'
+  opts.banner = 'usage: isspam.rb [-ynpdsvw] [-f database] [-m max] [-c count]'
 
   opts.on('-y', '--yes', 'Add message to database not spam') do
     raise "More than one mode specified" if mode
@@ -39,6 +39,11 @@ optparse = OptionParser.new do |opts|
   opts.on('-s', '--stats', 'Output general stats') do
     raise "More than one mode specified" if mode
     mode = :stats
+  end
+
+  opts.on('-w', '--wordstats', 'Output word and phrase specific stats') do
+    raise "More than one mode specified" if mode
+    mode = :phrase_stats
   end
 
   opts.on('-f', '--file database', 'Specify spam database') do |file|
@@ -87,6 +92,14 @@ if mode
         puts "#{stats[:phrases]} unique phrases in #{stats[:total]} messages: #{stats[:spam]} spam, #{stats[:good]} good"
       else
         puts "phrases:#{stats[:phrases]} messages:#{stats[:total]} spam:#{stats[:spam]} good:#{stats[:good]}"
+      end
+    when :phrase_stats
+      isspam.max_phrase_length = max if max && max > 0
+      words = $<.readlines.join
+      puts "Phrase                                             # Spam             # OK  Prob"
+      puts "------                                             ------             ----  ----"
+      isspam.phrase_stats words do |phrase, spam, good, prob|
+	printf "%-40s %16d %16d %s\n", phrase[0,40], spam, good, (prob ? (sprintf "%3.3f", prob) : " N/S")
       end
     else
       isspam.max_phrase_length = max if max && max > 0

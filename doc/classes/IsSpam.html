@@ -95,7 +95,8 @@ A Bayesian spam filter with a SQLite back-end
       <a href="#M000005">dump</a>&nbsp;&nbsp;
       <a href="#M000001">new</a>&nbsp;&nbsp;
       <a href="#M000003">no</a>&nbsp;&nbsp;
-      <a href="#M000007">onprogress</a>&nbsp;&nbsp;
+      <a href="#M000008">onprogress</a>&nbsp;&nbsp;
+      <a href="#M000007">phrase_stats</a>&nbsp;&nbsp;
       <a href="#M000006">stats</a>&nbsp;&nbsp;
       <a href="#M000004">well?</a>&nbsp;&nbsp;
       <a href="#M000002">yes</a>&nbsp;&nbsp;
@@ -241,12 +242,12 @@ Message is not spam, update database accordingly
         </div>
       </div>
 
-      <div id="method-M000007" class="method-detail">
-        <a name="M000007"></a>
+      <div id="method-M000008" class="method-detail">
+        <a name="M000008"></a>
 
         <div class="method-heading">
-          <a href="IsSpam.src/M000007.html" target="Code" class="method-signature"
-            onclick="popupCode('IsSpam.src/M000007.html');return false;">
+          <a href="IsSpam.src/M000008.html" target="Code" class="method-signature"
+            onclick="popupCode('IsSpam.src/M000008.html');return false;">
           <span class="method-name">onprogress</span><span class="method-args">(&amp;block)</span>
           </a>
         </div>
@@ -254,6 +255,23 @@ Message is not spam, update database accordingly
         <div class="method-description">
           <p>
 Set the progress_callback to the block passed
+</p>
+        </div>
+      </div>
+
+      <div id="method-M000007" class="method-detail">
+        <a name="M000007"></a>
+
+        <div class="method-heading">
+          <a href="IsSpam.src/M000007.html" target="Code" class="method-signature"
+            onclick="popupCode('IsSpam.src/M000007.html');return false;">
+          <span class="method-name">phrase_stats</span><span class="method-args">(words) {|phrase, spam, good, score| ...}</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Yields detailed statistics for each phrase in the input
 </p>
         </div>
       </div>

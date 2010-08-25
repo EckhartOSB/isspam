@@ -141,14 +141,16 @@ private
   end
 
   def probability(b, g, nb, ng)
-    bp = b / nb
-    bp = 1.0 if bp > 1.0
-    gp = g / ng
-    gp = 1.0 if gp > 1.0
-    p = bp / (bp + gp)
-    p = 0.01 if p < 0.01
-    p = 0.99 if p > 0.99
-    p
+    if (b + g) >= 5
+      bp = b / nb
+      bp = 1.0 if bp > 1.0
+      gp = g / ng
+      gp = 1.0 if gp > 1.0
+      p = bp / (bp + gp)
+      p = 0.01 if p < 0.01
+      p = 0.99 if p > 0.99
+      p
+    end
   end
 
 public
@@ -176,9 +178,8 @@ public
       if row
 	b = row[0].to_f
 	g = row[1].to_f
-	if ((b + g) >= 5)
-	  probs << probability(b, g, nb, ng)
-	end
+	p = probability(b, g, nb, ng)
+	probs << p if p
       end
     end
     if probs.length > 0
@@ -205,11 +206,11 @@ public
     count = 0
     @db.execute("select * from SPAMSTATS order by phrase") do |phrase, spam, good|
       count += 1
-      b = spam.to_i
-      g = good.to_i
-      if (b + g) >= 5
-	sign += 1
-	p = probability(b, g, nb, ng)
+      b = spam.to_f
+      g = good.to_f
+      p = probability(b, g, nb, ng)
+      if p
+        sign += 1
 	file.puts sprintf("%-40s %16d %16d %3.3f", phrase[0,40], b, g, p)
 	o = b + g
 	case p <=> cleanest[:prob]
@@ -270,6 +271,24 @@ public
     {:phrases => phrases, :total => total, :spam => spam, :good => good }
   end
 
+  # Yields detailed statistics for each phrase in the input
+  def phrase_stats(words)
+    trow = @db.get_first_row("select spam,good from TOTALS where id = 0")
+    nb = trow[0].to_i
+    ng = trow[1].to_i
+    each_phrase(words) do |phrase|
+      row = @db.get_first_row("select spam,good from SPAMSTATS where phrase = ?", phrase)
+      if row
+        spam = row[0].to_f
+	good = row[1].to_f
+      else
+        spam = 0
+	good = 0
+      end
+      score = probability(spam, good, nb, ng)
+      yield phrase, spam, good, score
+    end
+  end
 
   # Set the progress_callback to the block passed
   def onprogress(&block)
