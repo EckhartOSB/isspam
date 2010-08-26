@@ -99,7 +99,9 @@ if mode
       puts "Phrase                                             # Spam             # OK  Prob"
       puts "------                                             ------             ----  ----"
       isspam.phrase_stats words do |phrase, spam, good, prob|
-	printf "%-40s %16d %16d %s\n", phrase[0,40], spam, good, (prob ? (sprintf "%3.3f", prob) : " N/S")
+	printf "\r%-40s %16d %16d %s\n", phrase[0,40], spam, good, (prob ? (sprintf "%3.3f", prob) : " N/S")
+	$stdout.flush
+	msglen = 0
       end
     else
       isspam.max_phrase_length = max if max && max > 0
