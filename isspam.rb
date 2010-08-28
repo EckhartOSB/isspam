@@ -121,18 +121,17 @@ private
 
   def add(message, spam)
     @db.transaction do |db|
+      s = @db.prepare "select spam,good from SPAMSTATS where phrase = ?"
+      u = @db.prepare "update SPAMSTATS set spam=?, good=? where phrase = ?"
+      i = @db.prepare "insert into SPAMSTATS (phrase,spam,good) values (?,?,?)"
       each_phrase(message) do |phrase|
-	row = @db.get_first_row("select spam,good from SPAMSTATS where phrase = ?", phrase)
-	if row
-	  row = add_one(row, spam)
-	  @db.execute("update SPAMSTATS
-		    set spam=?, good=?
-		    where phrase = ?",
-		    [row[0], row[1], phrase])
+	rows = s.execute! phrase
+	if rows.size > 0
+	  row = add_one(rows[0], spam)
+	  u.execute row[0], row[1], phrase
 	else
 	  row = add_one([0,0], spam)
-	  @db.execute("insert into SPAMSTATS (phrase,spam,good)
-	  	values (?, ?, ?)", [phrase, row[0], row[1]])
+	  i.execute phrase, row[0], row[1]
 	end
       end
       row = add_one(@db.get_first_row("select spam,good from TOTALS where id = 0"), spam)
@@ -173,9 +172,9 @@ public
     nb = row[0].to_f	    # total spam messages
     ng = row[1].to_f        # total nonspam messages
     raise "Cannot compute probability: sample too small" if ((nb < 1) || (ng < 1))
+    s = @db.prepare "select spam, good from SPAMSTATS where phrase = ?"
     each_phrase(message) do |phrase|
-      row = @db.get_first_row("select spam,good from SPAMSTATS where phrase = ?", phrase)
-      if row
+      s.execute! phrase do |row|
 	b = row[0].to_f
 	g = row[1].to_f
 	p = probability(b, g, nb, ng)
@@ -276,14 +275,13 @@ public
     trow = @db.get_first_row("select spam,good from TOTALS where id = 0")
     nb = trow[0].to_i
     ng = trow[1].to_i
+    s = @db.prepare "select spam,good from SPAMSTATS where phrase = ?"
     each_phrase(words) do |phrase|
-      row = @db.get_first_row("select spam,good from SPAMSTATS where phrase = ?", phrase)
-      if row
+      spam = 0
+      good = 0
+      s.execute! phrase do |row|
         spam = row[0].to_f
 	good = row[1].to_f
-      else
-        spam = 0
-	good = 0
       end
       score = probability(spam, good, nb, ng)
       yield phrase, spam, good, score
