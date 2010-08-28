@@ -265,7 +265,7 @@ public
     spam = trow[0].to_i
     good = trow[1].to_i
     total = spam + good
-    trow = @db.get_first_row("select count(*) from SPAMSTATS")
+    trow = @db.get_first_row("select count(phrase) from SPAMSTATS")
     phrases = trow[0].to_i
     {:phrases => phrases, :total => total, :spam => spam, :good => good }
   end
