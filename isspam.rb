@@ -42,7 +42,11 @@ class IsSpam
 	@progress_callback.call "Database busy timed out." if @progress_callback
         0
       else
-	@progress_callback.call "Database busy...retry #{retries+1}/#{@retries}" if @progress_callback
+	if retries
+	  @progress_callback.call "Database busy...retry #{retries+1}/#{@retries}"
+	else
+	  @progress_callback.call "Database busy...retrying #{resource ? resource.to_s : ""}"
+	end if @progress_callback
 	sleep @retry_interval
 	1
       end
