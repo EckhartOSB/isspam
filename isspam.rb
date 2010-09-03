@@ -37,16 +37,12 @@ class IsSpam
     @db = SQLite3::Database.new(database)
     @retries = 60
     @retry_interval = 5
-    @db.busy_handler() do |resource, retries|
+    @db.busy_handler() do |retries|
       if retries && (retries >= @retries)
 	@progress_callback.call "Database busy timed out." if @progress_callback
         0
       else
-	if retries
-	  @progress_callback.call "Database busy...retry #{retries+1}/#{@retries}"
-	else
-	  @progress_callback.call "Database busy...retrying #{resource ? resource.to_s : ""}"
-	end if @progress_callback
+	@progress_callback.call "Database busy...retry #{retries+1}/#{@retries}" if @progress_callback
 	sleep @retry_interval
 	1
       end
