@@ -10,11 +10,12 @@ require 'isspam'
 mode = nil
 database = "~/.isspam.db"
 max = nil
+maxsize = nil
 count = nil
 verbose = false
 
 optparse = OptionParser.new do |opts|
-  opts.banner = 'usage: isspam.rb [-ynpdsvw] [-f database] [-m max] [-c count]'
+  opts.banner = 'usage: isspam.rb [-ynpdsvw] [-f database] [-m max] [-M max] [-c count]'
 
   opts.on('-y', '--yes', 'Add message to database not spam') do
     raise "More than one mode specified" if mode
@@ -56,6 +57,10 @@ optparse = OptionParser.new do |opts|
 
   opts.on('-m', '--max maxphrase', 'Specify maximum phrase length (default = 3)') do |m|
     max = m.to_i
+  end
+
+  opts.on('-M', '--Maxsize maxsize', 'Specify maximum size of messages to process (default = no max)') do |m|
+    maxsize = m.to_i
   end
 
   opts.on('-c', '--count significant', 'Specify the number of most significant phrases to count', '(applies to -p only, default = 15, include all = -1') do |c|
@@ -114,7 +119,11 @@ if mode
 	  print "Message #{count+=1}/#{msgs.size}\t"
 	  $stdout.flush
 	end
-	rslt = isspam.send(mode, msg) if msg.length > 0
+	if (msg.length > maxsize)
+	  print "Exceeds max size of #{maxsize} bytes (#{msg.length})" if verbose
+	else
+	  rslt = isspam.send(mode, msg) if msg.length > 0
+	end
 	if rslt
 	  printf("%3.3f\n", rslt)
 	else

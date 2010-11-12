@@ -11,6 +11,7 @@
 .Op Fl c Ar count
 .Op Fl f Ar database
 .Op Fl m Ar maxphrase
+.Op Fl M Ar maxsize
 .Op Ar file...
 .Sh DESCRIPTION
 The isspam utility provides a command-line interface to the IsSpam Ruby class, which performs Bayesian filtering on potential spam, in a manner very similar to the approach described in Paul Graham's essay "A Plan for Spam" <http://www.paulgraham.com/spam.html>.
@@ -32,6 +33,8 @@ Specify the maximum phrase length to test (default is 3).  Applies only to the
 and
 .Op Fl w
 options.
+.It Fl M, Maxsize Ar maxsize
+Specify the maximum size of messages to process.  Any larger messages will be skipped.  Default is no maximum.
 .It Fl n, no
 Treat all input as not spam, and update the database accordingly.
 .It Fl p, probability
