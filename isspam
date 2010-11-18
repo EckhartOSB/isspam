@@ -119,7 +119,7 @@ if mode
 	  print "Message #{count+=1}/#{msgs.size}\t"
 	  $stdout.flush
 	end
-	if (msg.length > maxsize)
+	if (maxsize && (msg.length > maxsize))
 	  print "Exceeds max size of #{maxsize} bytes (#{msg.length})" if verbose
 	else
 	  rslt = isspam.send(mode, msg) if msg.length > 0
