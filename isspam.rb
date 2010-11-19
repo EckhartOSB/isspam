@@ -152,6 +152,10 @@ private
     end
   end
 
+  def better(a,b)
+    (a - 0.5).abs > (b - 0.5).abs
+  end
+
 public
   # Message is spam, update database accordingly
   def yes(message)
@@ -182,7 +186,17 @@ public
       end
     end
     if probs.length > 0
-      probs = probs.sort {|a,b| (b - 0.5).abs <=> (a - 0.5).abs}[0..@max_significant]	# descending by distance from 0.5
+      if @max_significant && (@max_significant > 0)
+	# collect the @max_significant most significant members of the array
+        probs = probs.inject([]) do |ary, itm|
+	  ary.shift if (ary.length >= @max_significant) && (better itm, ary.first)
+	  if ary.length < @max_significant
+	    place = ary.each_with_index { |o,i| break i if better o, itm }
+	    place.kind_of?(Array) ? (ary << itm) : (ary.insert place, itm)
+	  end
+	  ary
+	end
+      end
       prod = probs.inject(1) {|t,i| t * i}
       prod / (prod + probs.inject(1){|t,i| t * (1.0 - i)})
     else
