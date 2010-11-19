@@ -191,8 +191,16 @@ public
         probs = probs.inject([]) do |ary, itm|
 	  ary.shift if (ary.length >= @max_significant) && (better itm, ary.first)
 	  if ary.length < @max_significant
-	    place = ary.each_with_index { |o,i| break i if better o, itm }
-	    place.kind_of?(Array) ? (ary << itm) : (ary.insert place, itm)
+	    max = ary.length - 1
+	    if max > 0
+	      place = ary.each_with_index do |o,i|
+		break i if (better o,itm)
+		break i+1 if i == max
+	      end
+	    else
+	      place = 0
+	    end
+	    ary.insert place, itm
 	  end
 	  ary
 	end
