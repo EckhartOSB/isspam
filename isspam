@@ -112,7 +112,7 @@ if mode
       isspam.max_phrase_length = max if max && max > 0
       isspam.max_significant = count if count
       count = 0
-      msgs = $<.readlines.join.split(/^From /).reject {|msg| msg.length < 2}
+      msgs = $<.readlines.join.split(/^From [a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6} /).reject {|msg| msg.length < 2 }
       msgs.each do |msg|
 	if verbose
 	  msglen = 0
