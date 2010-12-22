@@ -5,62 +5,14 @@
 
 <html>
 <head>
-  <title>new (IsSpam)</title>
+  <title>done (IsSpam)</title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
   <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
 </head>
 <body class="standalone-code">
-  <pre><span class="ruby-comment cmt"># File isspam.rb, line 35</span>
-  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">database</span>)
-    <span class="ruby-identifier">newdb</span> = <span class="ruby-operator">!</span><span class="ruby-constant">File</span>.<span class="ruby-identifier">exists?</span>(<span class="ruby-identifier">database</span>)
-    <span class="ruby-ivar">@db</span> = <span class="ruby-constant">SQLite3</span><span class="ruby-operator">::</span><span class="ruby-constant">Database</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">database</span>)
-    <span class="ruby-ivar">@retries</span> = <span class="ruby-value">60</span>
-    <span class="ruby-ivar">@retry_interval</span> = <span class="ruby-value">5</span>
-    <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">busy_handler</span>() <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">retries</span><span class="ruby-operator">|</span>
-      <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">retries</span> <span class="ruby-operator">&amp;&amp;</span> (<span class="ruby-identifier">retries</span> <span class="ruby-operator">&gt;=</span> <span class="ruby-ivar">@retries</span>)
-        <span class="ruby-ivar">@progress_callback</span>.<span class="ruby-identifier">call</span> <span class="ruby-value str">&quot;Database busy timed out.&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-ivar">@progress_callback</span>
-        <span class="ruby-value">0</span>
-      <span class="ruby-keyword kw">else</span>
-        <span class="ruby-ivar">@progress_callback</span>.<span class="ruby-identifier">call</span> <span class="ruby-node">&quot;Database busy...retry #{retries+1}/#{@retries}&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-ivar">@progress_callback</span>
-        <span class="ruby-identifier">sleep</span> <span class="ruby-ivar">@retry_interval</span>
-        <span class="ruby-value">1</span>
-      <span class="ruby-keyword kw">end</span>
-    <span class="ruby-keyword kw">end</span>
-    <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">newdb</span>
-      <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">execute</span>(<span class="ruby-value str">&quot;create table SPAMSTATS (
-            phrase VARCHAR(256) NOT NULL PRIMARY KEY,
-            spam BIGINT NOT NULL DEFAULT 0,
-            good BIGINT NOT NULL DEFAULT 0
-            );&quot;</span>)
-      <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">execute</span>(<span class="ruby-value str">&quot;create table TOTALS (
-            id INT NOT NULL PRIMARY KEY,
-            spam BIGINT NOT NULL DEFAULT 0,
-            good BIGINT NOT NULL DEFAULT 0
-            );&quot;</span>)
-      <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">execute</span>(<span class="ruby-value str">&quot;insert into TOTALS (id, spam, good)
-                   values (0, 0, 0)&quot;</span>)
-    <span class="ruby-keyword kw">else</span>
-      <span class="ruby-keyword kw">begin</span>
-        <span class="ruby-identifier">trow</span> = <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">get_first_row</span>(<span class="ruby-value str">&quot;select spam,good from TOTALS where id = 0&quot;</span>)
-      <span class="ruby-keyword kw">rescue</span> <span class="ruby-constant">SQLite3</span><span class="ruby-operator">::</span><span class="ruby-constant">SQLException</span>
-        <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">execute</span>(<span class="ruby-value str">&quot;create table TOTALS (
-              id INT NOT NULL PRIMARY KEY,
-              spam BIGINT NOT NULL DEFAULT 0,
-              good BIGINT NOT NULL DEFAULT 0
-              );&quot;</span>)
-        <span class="ruby-comment cmt"># old totals row</span>
-        <span class="ruby-identifier">spam</span>, <span class="ruby-identifier">good</span> = <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">get_first_row</span>(<span class="ruby-value str">&quot;select spam, good from SPAMSTATS where phrase = ' '&quot;</span>)
-        <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">execute</span>(<span class="ruby-value str">&quot;insert into TOTALS (id, spam, good)
-                     values (0, ?, ?)&quot;</span>, [<span class="ruby-identifier">spam</span>, <span class="ruby-identifier">good</span>]) 
-        <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">execute</span>(<span class="ruby-value str">&quot;delete from SPAMSTATS where phrase = ' '&quot;</span>)
-      <span class="ruby-keyword kw">end</span>
-
-    <span class="ruby-keyword kw">end</span>
-    <span class="ruby-ivar">@word_split</span> = <span class="ruby-regexp re">/[.:;,]*[\s\n\r\v]+/</span>
-    <span class="ruby-ivar">@trailing</span> = <span class="ruby-regexp re">/([!?])$/</span>
-    <span class="ruby-ivar">@max_phrase_length</span> = <span class="ruby-value">3</span>
-    <span class="ruby-ivar">@max_significant</span> = <span class="ruby-value">15</span>
-    <span class="ruby-ivar">@progress_callback</span> = <span class="ruby-keyword kw">nil</span>
+  <pre><span class="ruby-comment cmt"># File isspam.rb, line 33</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-constant">IsSpam</span><span class="ruby-operator">::</span><span class="ruby-identifier">done</span>
+    <span class="ruby-ivar">@@done</span> <span class="ruby-operator">||=</span> <span class="ruby-constant">Done</span>.<span class="ruby-identifier">new</span>
   <span class="ruby-keyword kw">end</span></pre>
 </body>
 </html>

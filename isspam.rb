@@ -28,6 +28,11 @@ class IsSpam
 
   # Block to handle progress updates
   attr :progress_callback, true
+  
+  # Value to return to break out of IsSpam yield loops
+  def IsSpam::done
+    @@done ||= Done.new
+  end
 
   # Connect to (or create) a Bayesian database
   #
@@ -38,14 +43,15 @@ class IsSpam
     @retries = 60
     @retry_interval = 5
     @db.busy_handler() do |retries|
+      rval = 1
       if retries && (retries >= @retries)
 	@progress_callback.call "Database busy timed out." if @progress_callback
-        0
+        rval = 0
       else
-	@progress_callback.call "Database busy...retry #{retries+1}/#{@retries}" if @progress_callback
-	sleep @retry_interval
-	1
+	rval = 0 if @progress_callback && IsSpam.done.equals?(@progress_callback.call "Database busy...retry #{retries+1}/#{@retries}")
+	sleep @retry_interval if rval != 0
       end
+      rval
     end
     if newdb
       @db.execute("create table SPAMSTATS (
@@ -85,6 +91,9 @@ class IsSpam
   end
 
 private
+  class Done
+  end
+
   def add_one(row, spam)
     if (spam)
       row[0] = row[0].to_i + 1
@@ -114,8 +123,8 @@ private
     phrases.uniq!
     phrases.each do |phrase|
       cnt += 1
-      @progress_callback.call "Phrase #{cnt}/#{phrases.size}" if @progress_callback
-      yield phrase
+      break if (@progress_callback && IsSpam::done.equal?(@progress_callback.call "Phrase #{cnt}/#{phrases.size}")) ||
+      		IsSpam::done.equal?(yield phrase)
     end
   end
 
@@ -178,33 +187,35 @@ public
     raise "Cannot compute probability: sample too small" if ((nb < 1) || (ng < 1))
     s = @db.prepare "select spam, good from SPAMSTATS where phrase = ?"
     each_phrase(message) do |phrase|
+      rval = nil
       s.execute! phrase do |row|
 	b = row[0].to_f
 	g = row[1].to_f
 	p = probability(b, g, nb, ng)
-	probs << p if p
-      end
-    end
-    if probs.length > 0
-      if @max_significant && (@max_significant > 0)
-	# collect the @max_significant most significant members of the array
-        probs = probs.inject([]) do |ary, itm|
-	  ary.shift if (ary.length >= @max_significant) && (better itm, ary.first)
-	  if ary.length < @max_significant
-	    max = ary.length - 1
-	    if max > 0
-	      place = ary.each_with_index do |o,i|
-		break i if (better o,itm)
-		break i+1 if i == max
+	if p
+	  if @max_significant && (@max_significant > 0)
+	    # keep probs in order from least significant
+	    probs.shift if (probs.length >= @max_significant) && (better p, probs.first)
+	    if (probs.length < @max_significant)	# room for one more?
+	      place = probs.length
+	      probs.each_with_index do |o,i|
+		if better o, p
+		  place = i
+		  break
+		end
 	      end
-	    else
-	      place = 0
+	      probs.insert place, p
+	      # optimization: array full of certainties, no need to look further
+	      rval = IsSpam::done if (probs.length >= @max_significant) && (better probs.first, 0.02)
 	    end
-	    ary.insert place, itm
+	  else
+	    probs << p
 	  end
-	  ary
 	end
       end
+      rval
+    end
+    if probs.length > 0
       prod = probs.inject(1) {|t,i| t * i}
       prod / (prod + probs.inject(1){|t,i| t * (1.0 - i)})
     else
