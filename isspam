@@ -7,6 +7,8 @@
 require 'optparse'
 require 'isspam'
 
+UNIX_FROM = /^From \S+ ([A-Z][a-z]{2} ){2}[\s\d]\d \d{2}:\d{2}:\d{2} \d{4}$/
+
 mode = nil
 database = "~/.isspam.db"
 max = nil
@@ -112,7 +114,7 @@ if mode
       isspam.max_phrase_length = max if max && max > 0
       isspam.max_significant = count if count
       count = 0
-      msgs = $<.readlines.join.split(/^From [a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6} /).reject {|msg| msg.length < 2 }
+      msgs = $<.readlines.join.split(UNIX_FROM).reject {|msg| msg.length < 2 }
       msgs.each do |msg|
 	if verbose
 	  msglen = 0

@@ -9,8 +9,9 @@ Spam" <http://www.paulgraham.com/spam.html>.
 
 This utility can take incoming messages either on stdin or as file
 arguments.  The input may contain multiple messages, which will be
-distinguished by a Unix "from" header (/^From /).  Thus, you can use an
-entire mail folder (in mbox format) as input, or individual messages.
+distinguished by a Unix "from" header (See UNIX_FROM in isspam).
+Thus, you can use an entire mail folder (in mbox format) as input,
+or individual messages.
 
 See the man page (included under man) for details on using this utility.
 
