@@ -7,7 +7,7 @@
 require 'optparse'
 require 'isspam'
 
-UNIX_FROM = /^From \S+ ([A-Z][a-z]{2} ){2}[\s\d]\d \d{2}:\d{2}:\d{2} \d{4}$/
+UNIX_FROM = /^From \S+ [A-Z][a-z]{2} [A-Z][a-z]{2} [\s\d]\d \d{2}:\d{2}:\d{2} \d{4}/m
 
 mode = nil
 database = "~/.isspam.db"
