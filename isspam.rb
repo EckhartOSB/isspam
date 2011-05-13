@@ -192,7 +192,7 @@ public
 	b = row[0].to_f
 	g = row[1].to_f
 	p = probability(b, g, nb, ng)
-	if p
+	if p && p.finite?
 	  if @max_significant && (@max_significant > 0)
 	    # keep probs in order from least significant
 	    probs.shift if (probs.length >= @max_significant) && (better p, probs.first)
